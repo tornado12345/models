@@ -8,6 +8,7 @@ message ImageResizer {
   oneof image_resizer_oneof {
     KeepAspectRatioResizer keep_aspect_ratio_resizer = 1;
     FixedShapeResizer fixed_shape_resizer = 2;
+    IdentityResizer identity_resizer = 3;
   }
 }
 
@@ -17,6 +18,9 @@ enum ResizeType {
   NEAREST_NEIGHBOR = 1; // Corresponds to tf.image.ResizeMethod.NEAREST_NEIGHBOR
   BICUBIC = 2; // Corresponds to tf.image.ResizeMethod.BICUBIC
   AREA = 3; // Corresponds to tf.image.ResizeMethod.AREA
+}
+
+message IdentityResizer {
 }
 
 // Configuration proto for image resizer that keeps aspect ratio.
@@ -37,6 +41,10 @@ message KeepAspectRatioResizer {
 
   // Whether to also resize the image channels from 3 to 1 (RGB to grayscale).
   optional bool convert_to_grayscale = 5 [default = false];
+
+  // Per-channel pad value. This is only used when pad_to_max_dimension is True.
+  // If unspecified, a default pad value of 0 is applied to all channels.
+  repeated float per_channel_pad_value = 6;
 }
 
 // Configuration proto for image resizer that resizes to a fixed shape.

@@ -16,6 +16,8 @@
 """Functions to build DetectionModel training optimizers."""
 
 import tensorflow as tf
+
+
 from object_detection.utils import learning_schedules
 
 
@@ -59,6 +61,7 @@ def build(optimizer_config):
     summary_vars.append(learning_rate)
     optimizer = tf.train.AdamOptimizer(learning_rate)
 
+
   if optimizer is None:
     raise ValueError('Optimizer %s not supported.' % optimizer_type)
 
@@ -90,12 +93,15 @@ def _create_learning_rate(learning_rate_config):
 
   if learning_rate_type == 'exponential_decay_learning_rate':
     config = learning_rate_config.exponential_decay_learning_rate
-    learning_rate = tf.train.exponential_decay(
-        config.initial_learning_rate,
+    learning_rate = learning_schedules.exponential_decay_with_burnin(
         tf.train.get_or_create_global_step(),
+        config.initial_learning_rate,
         config.decay_steps,
         config.decay_factor,
-        staircase=config.staircase, name='learning_rate')
+        burnin_learning_rate=config.burnin_learning_rate,
+        burnin_steps=config.burnin_steps,
+        min_learning_rate=config.min_learning_rate,
+        staircase=config.staircase)
 
   if learning_rate_type == 'manual_step_learning_rate':
     config = learning_rate_config.manual_step_learning_rate

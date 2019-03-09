@@ -20,6 +20,8 @@ import re
 
 import tensorflow as tf
 
+from tensorflow.python.ops import variables as tf_variables
+
 slim = tf.contrib.slim
 
 
@@ -118,7 +120,13 @@ def get_variables_available_in_checkpoint(variables,
     ValueError: if `variables` is not a list or dict.
   """
   if isinstance(variables, list):
-    variable_names_map = {variable.op.name: variable for variable in variables}
+    variable_names_map = {}
+    for variable in variables:
+      if isinstance(variable, tf_variables.PartitionedVariable):
+        name = variable.name
+      else:
+        name = variable.op.name
+      variable_names_map[name] = variable
   elif isinstance(variables, dict):
     variable_names_map = variables
   else:
@@ -134,8 +142,11 @@ def get_variables_available_in_checkpoint(variables,
         vars_in_ckpt[variable_name] = variable
       else:
         logging.warning('Variable [%s] is available in checkpoint, but has an '
-                        'incompatible shape with model variable.',
-                        variable_name)
+                        'incompatible shape with model variable. Checkpoint '
+                        'shape: [%s], model variable shape: [%s]. This '
+                        'variable will not be initialized from the checkpoint.',
+                        variable_name, ckpt_vars_to_shape_map[variable_name],
+                        variable.shape.as_list())
     else:
       logging.warning('Variable [%s] is not available in checkpoint',
                       variable_name)
